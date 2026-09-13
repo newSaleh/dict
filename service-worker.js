@@ -1,0 +1,55 @@
+// يجعل التطبيق يعمل بالكامل بدون إنترنت (Offline First):
+// كل ملفات الواجهة تُخزَّن محليًا عند أول زيارة، والبيانات نفسها مخزّنة في IndexedDB
+// (انظر src/db.js) وليس لها علاقة بهذا الملف.
+const CACHE_VERSION = 'sdc-v1';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './src/styles.css',
+  './src/app.js',
+  './src/db.js',
+  './src/i18n.js',
+  './src/i18n/ar.js',
+  './src/i18n/en.js',
+  './src/i18n/ur.js',
+  './src/search.js',
+  './src/auth.js',
+  './src/duplicates.js',
+  './src/export-image.js',
+  './src/render.js',
+  './src/modal.js',
+  './src/utils.js',
+  './icons/icon.svg',
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => cached);
+    })
+  );
+});

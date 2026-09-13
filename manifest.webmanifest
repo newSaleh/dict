@@ -1,0 +1,26 @@
+{
+  "name": "مركز بيانات الموردين — Supplier Data Center",
+  "short_name": "الموردين",
+  "description": "مرجع سريع للبحث عن الموردين ومعلوماتهم، يعمل بالكامل بدون إنترنت.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f7f5",
+  "theme_color": "#1d6f5c",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
