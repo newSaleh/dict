@@ -30,6 +30,8 @@ export default {
   addAnotherBrand: '+ ایک اور برانڈ شامل کریں',
   removeItem: 'حذف کریں',
   hideNamesOnExport: 'سپلائرز کے نام چھپائیں',
+  hideNamesHint: 'یہ صرف "فہرست کو تصویر کے طور پر محفوظ کریں" دبانے کے بعد بننے والی تصویر میں ظاہر ہوگا، اسکرین پر کچھ تبدیل نہیں ہوگا۔',
+  imagesReady: 'تصویر کامیابی سے بن گئی',
   exportListImage: '📷 فہرست کو تصویر کے طور پر محفوظ کریں',
   generatingImages: 'تصاویر بنائی جا رہی ہیں…',
   suppliersListTitle: 'سپلائرز کی فہرست',

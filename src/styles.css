@@ -197,10 +197,20 @@ input {
 
 .list-export-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 14px;
+}
+.hide-name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hide-name-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  max-width: 320px;
 }
 .hide-name-label {
   display: flex;

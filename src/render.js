@@ -6,7 +6,12 @@ export function renderListExportBar(role, count, onExport) {
   const children = [];
   if (role === 'admin') {
     hideNamesCheckbox = el('input', { type: 'checkbox', class: 'hide-name-checkbox' });
-    children.push(el('label', { class: 'hide-name-label' }, [hideNamesCheckbox, ' ' + t('hideNamesOnExport')]));
+    children.push(
+      el('div', { class: 'hide-name-block' }, [
+        el('label', { class: 'hide-name-label' }, [hideNamesCheckbox, ' ' + t('hideNamesOnExport')]),
+        el('div', { class: 'hide-name-hint', text: t('hideNamesHint') }),
+      ])
+    );
   }
   children.push(
     el('button', {

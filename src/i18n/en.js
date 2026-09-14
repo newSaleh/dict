@@ -30,6 +30,8 @@ export default {
   addAnotherBrand: '+ Add another brand',
   removeItem: 'Remove',
   hideNamesOnExport: 'Hide supplier names',
+  hideNamesHint: 'This only affects the image produced after pressing "Export list as image" — nothing changes on screen.',
+  imagesReady: 'Image saved successfully',
   exportListImage: '📷 Export list as image',
   generatingImages: 'Generating images…',
   suppliersListTitle: 'Supplier List',

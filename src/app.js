@@ -189,6 +189,7 @@ async function handleExportList(results, options) {
   try {
     toast(t('generatingImages'));
     await exportSuppliersListAsImages(results, options);
+    toast(t('imagesReady'));
   } catch (err) {
     console.error(err);
     toast(String(err.message || err));

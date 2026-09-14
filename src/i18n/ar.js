@@ -30,6 +30,8 @@ export default {
   addAnotherBrand: '+ إضافة ماركة أخرى',
   removeItem: 'حذف',
   hideNamesOnExport: 'إخفاء أسماء الموردين',
+  hideNamesHint: 'يظهر هذا فقط في الصورة الناتجة بعد الضغط على "تصدير القائمة كصورة"، ولا يغيّر شيئًا في الشاشة نفسها.',
+  imagesReady: 'تم إنشاء الصورة بنجاح',
   exportListImage: '📷 تصدير القائمة كصورة',
   generatingImages: 'جارِ إنشاء الصور…',
   suppliersListTitle: 'قائمة الموردين',
