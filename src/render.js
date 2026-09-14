@@ -1,6 +1,24 @@
 import { el, clear, formatDate } from './utils.js';
 import { t, getLang } from './i18n.js';
 
+export function renderListExportBar(role, count, onExport) {
+  let hideNamesCheckbox = null;
+  const children = [];
+  if (role === 'admin') {
+    hideNamesCheckbox = el('input', { type: 'checkbox', class: 'hide-name-checkbox' });
+    children.push(el('label', { class: 'hide-name-label' }, [hideNamesCheckbox, ' ' + t('hideNamesOnExport')]));
+  }
+  children.push(
+    el('button', {
+      class: 'btn btn-outline btn-export-list',
+      type: 'button',
+      text: t('exportListImage'),
+      onClick: () => onExport({ hideName: hideNamesCheckbox?.checked || false }),
+    })
+  );
+  return el('div', { class: 'list-export-bar' }, children);
+}
+
 export function renderSupplierCard(supplier, { role, onExport, onSuggestEdit, onEdit, onDelete }) {
   const codesBlock = el('div', { class: 'card-field' }, [
     el('div', { class: 'field-label', text: t('fieldSupplierCodes') }),
@@ -30,13 +48,23 @@ export function renderSupplierCard(supplier, { role, onExport, onSuggestEdit, on
     ),
   ]);
 
-  const actions = el('div', { class: 'card-actions' }, [
+  let hideNameCheckbox = null;
+  const exportWrap = el('div', { class: 'export-wrap' });
+  if (role === 'admin') {
+    hideNameCheckbox = el('input', { type: 'checkbox', class: 'hide-name-checkbox' });
+    exportWrap.appendChild(el('label', { class: 'hide-name-label' }, [hideNameCheckbox, ' ' + t('hideNameOnExport')]));
+  }
+  exportWrap.appendChild(
     el('button', {
       class: 'btn btn-outline',
       type: 'button',
       text: t('exportImage'),
-      onClick: () => onExport(supplier),
-    }),
+      onClick: () => onExport(supplier, { hideName: hideNameCheckbox?.checked || false }),
+    })
+  );
+
+  const actions = el('div', { class: 'card-actions' }, [
+    exportWrap,
     role === 'admin'
       ? el('button', {
           class: 'btn btn-outline',

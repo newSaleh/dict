@@ -15,7 +15,7 @@ import {
 import { getRole, isAdmin, onRoleChange, loginAsAdmin, logout, changeAdminPin, ensurePinInitialized } from './auth.js';
 import { searchSuppliers } from './search.js';
 import { findDuplicates } from './duplicates.js';
-import { exportSupplierAsImage } from './export-image.js';
+import { exportSupplierAsImage, exportSuppliersListAsImages } from './export-image.js';
 import { el, clear, debounce } from './utils.js';
 import {
   renderSupplierCard,
@@ -23,6 +23,7 @@ import {
   renderEmptyState,
   buildSupplierForm,
   renderRequestCard,
+  renderListExportBar,
 } from './render.js';
 import { openModal, closeModal, toast } from './modal.js';
 
@@ -155,12 +156,15 @@ function renderSearchView(root) {
       resultsContainer.appendChild(renderEmptyState(input.value.trim().length > 0));
       return;
     }
+    resultsContainer.appendChild(
+      renderListExportBar(getRole(), results.length, (options) => handleExportList(results, options))
+    );
     const list = el('div', { class: 'cards-list' });
     for (const supplier of results) {
       list.appendChild(
         renderSupplierCard(supplier, {
           role: getRole(),
-          onExport: handleExportImage,
+          onExport: (s, options) => handleExportImage(s, options),
           onSuggestEdit: (s) => {
             suggestingEditFor = s;
             currentView = 'edit';
@@ -182,9 +186,19 @@ function renderSearchView(root) {
   update();
 }
 
-async function handleExportImage(supplier) {
+async function handleExportImage(supplier, options) {
   try {
-    await exportSupplierAsImage(supplier);
+    await exportSupplierAsImage(supplier, options);
+  } catch (err) {
+    console.error(err);
+    toast(String(err.message || err));
+  }
+}
+
+async function handleExportList(results, options) {
+  try {
+    toast(t('generatingImages'));
+    await exportSuppliersListAsImages(results, options);
   } catch (err) {
     console.error(err);
     toast(String(err.message || err));
