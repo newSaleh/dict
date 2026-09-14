@@ -19,7 +19,7 @@ export function renderListExportBar(role, count, onExport) {
   return el('div', { class: 'list-export-bar' }, children);
 }
 
-export function renderSupplierCard(supplier, { role, onExport, onSuggestEdit, onEdit, onDelete }) {
+export function renderSupplierCard(supplier, { role, onSuggestEdit, onEdit, onDelete }) {
   const codesBlock = el('div', { class: 'card-field' }, [
     el('div', { class: 'field-label', text: t('fieldSupplierCodes') }),
     el(
@@ -48,23 +48,7 @@ export function renderSupplierCard(supplier, { role, onExport, onSuggestEdit, on
     ),
   ]);
 
-  let hideNameCheckbox = null;
-  const exportWrap = el('div', { class: 'export-wrap' });
-  if (role === 'admin') {
-    hideNameCheckbox = el('input', { type: 'checkbox', class: 'hide-name-checkbox' });
-    exportWrap.appendChild(el('label', { class: 'hide-name-label' }, [hideNameCheckbox, ' ' + t('hideNameOnExport')]));
-  }
-  exportWrap.appendChild(
-    el('button', {
-      class: 'btn btn-outline',
-      type: 'button',
-      text: t('exportImage'),
-      onClick: () => onExport(supplier, { hideName: hideNameCheckbox?.checked || false }),
-    })
-  );
-
   const actions = el('div', { class: 'card-actions' }, [
-    exportWrap,
     role === 'admin'
       ? el('button', {
           class: 'btn btn-outline',
@@ -141,7 +125,22 @@ export function buildSupplierForm({ initial, onSubmit, submitLabel }) {
     });
     const row = el('div', { class: 'dynamic-row' }, [codeInput, cityInput, removeBtn]);
     row._get = () => ({ code: codeInput.value.trim(), city: cityInput.value.trim() });
+    row._cityInput = cityInput;
     codesContainer.appendChild(row);
+  }
+
+  // معظم الموردين الذين لديهم أكثر من رقم لديهم رقم في جدة وآخر في الرياض،
+  // فنقترح ذلك تلقائيًا عند إضافة رقم ثانٍ فقط (دون المساس بما كتبه المستخدم بالفعل)،
+  // وما بعده يُكتب يدويًا لأنه لا يوجد نمط افتراضي واضح.
+  function addCodeRowWithSmartDefault() {
+    const rows = Array.from(codesContainer.children);
+    if (rows.length === 1) {
+      const firstCity = rows[0]._cityInput;
+      if (!firstCity.value.trim()) firstCity.value = 'جدة';
+      addCodeRow('', 'الرياض');
+    } else {
+      addCodeRow();
+    }
   }
 
   function addBrandRow(brand = '') {
@@ -182,7 +181,7 @@ export function buildSupplierForm({ initial, onSubmit, submitLabel }) {
       class: 'btn btn-link',
       type: 'button',
       text: t('addAnotherCode'),
-      onClick: () => addCodeRow(),
+      onClick: () => addCodeRowWithSmartDefault(),
     }),
 
     el('label', { class: 'form-label', text: t('fieldBrands') }),

@@ -15,7 +15,7 @@ import {
 import { getRole, isAdmin, onRoleChange, loginAsAdmin, logout, changeAdminPin, ensurePinInitialized } from './auth.js';
 import { searchSuppliers } from './search.js';
 import { findDuplicates } from './duplicates.js';
-import { exportSupplierAsImage, exportSuppliersListAsImages } from './export-image.js';
+import { exportSuppliersListAsImages } from './export-image.js';
 import { el, clear, debounce } from './utils.js';
 import {
   renderSupplierCard,
@@ -164,7 +164,6 @@ function renderSearchView(root) {
       list.appendChild(
         renderSupplierCard(supplier, {
           role: getRole(),
-          onExport: (s, options) => handleExportImage(s, options),
           onSuggestEdit: (s) => {
             suggestingEditFor = s;
             currentView = 'edit';
@@ -184,15 +183,6 @@ function renderSearchView(root) {
 
   input.addEventListener('input', debounce(update, 80));
   update();
-}
-
-async function handleExportImage(supplier, options) {
-  try {
-    await exportSupplierAsImage(supplier, options);
-  } catch (err) {
-    console.error(err);
-    toast(String(err.message || err));
-  }
 }
 
 async function handleExportList(results, options) {

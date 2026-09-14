@@ -215,12 +215,6 @@ input {
   height: 18px;
   cursor: pointer;
 }
-.export-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
-}
 
 .cards-list {
   display: flex;
