@@ -163,6 +163,10 @@ async function handleManualSync() {
   syncInProgress = true;
   toast(t('syncing'));
   try {
+    // يفحص أيضًا وجود نسخة أحدث من التطبيق نفسه (وليس فقط البيانات)، حتى لا
+    // يبقى من لديه الرابط من قبل عالقًا على تصميم قديم بدون أن يفعل شيئًا
+    // بخلاف الضغط على نفس زر "تحديث" الذي يعرفه أصلًا
+    checkForAppUpdate();
     const { syncNow } = await import('./sync.js');
     const result = await syncNow();
     await refreshData();
@@ -176,6 +180,16 @@ async function handleManualSync() {
     showSyncErrorDetails([err]);
   } finally {
     syncInProgress = false;
+  }
+}
+
+async function checkForAppUpdate() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    await reg?.update();
+  } catch {
+    // تجاهل: هذا فحص إضافي اختياري ولا يجب أن يعطّل زر التحديث لو فشل
   }
 }
 
