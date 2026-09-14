@@ -112,6 +112,7 @@ export default {
   copiedToClipboard: 'تم النسخ',
   installApp: 'تثبيت التطبيق',
   syncButton: 'تحديث البيانات من الجميع',
+  syncLabel: 'تحديث',
   syncing: 'جارِ التحديث…',
   syncDone: 'تم التحديث',
   syncFailed: 'تعذّر التحديث — تحقّق من الاتصال بالإنترنت',

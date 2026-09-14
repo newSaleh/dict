@@ -9,16 +9,23 @@ const ROLE_KEY = 'sdc_role';
 const PIN_HASH_KEY = 'sdc_admin_pin_hash';
 const CLOUD_GRANTED_KEY = 'sdc_cloud_admin_granted';
 const DEFAULT_PIN = '1510';
+const PREVIOUS_DEFAULT_PIN = '1234'; // الافتراضي القديم قبل التغيير لـ 1510
+
+export async function ensurePinInitialized() {
+  const stored = localStorage.getItem(PIN_HASH_KEY);
+  if (!stored) {
+    localStorage.setItem(PIN_HASH_KEY, await sha256Hex(DEFAULT_PIN));
+    return;
+  }
+  // جهاز فتح التطبيق قبل تغيير الافتراضي ولم يغيّر كلمة المرور بنفسه أبدًا:
+  // نرقّيه تلقائيًا للافتراضي الجديد بدل أن يبقى عالقًا على القديم للأبد.
+  if (stored === (await sha256Hex(PREVIOUS_DEFAULT_PIN))) {
+    localStorage.setItem(PIN_HASH_KEY, await sha256Hex(DEFAULT_PIN));
+  }
+}
 
 let currentRole = localStorage.getItem(ROLE_KEY) === 'admin' ? 'admin' : 'user';
 const listeners = new Set();
-
-export async function ensurePinInitialized() {
-  if (!localStorage.getItem(PIN_HASH_KEY)) {
-    const hash = await sha256Hex(DEFAULT_PIN);
-    localStorage.setItem(PIN_HASH_KEY, hash);
-  }
-}
 
 export function getRole() {
   return currentRole;

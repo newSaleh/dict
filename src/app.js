@@ -173,7 +173,10 @@ function renderHeader() {
     el('div', { class: 'app-header-top' }, [
       el('div', { class: 'status-sync-group' }, [
         el('span', { class: `status-dot ${online ? 'online' : 'offline'}`, text: online ? t('onlineBadge') : t('offlineBadge') }),
-        el('button', { class: 'icon-btn sync-btn', type: 'button', 'aria-label': t('syncButton'), text: '🔄', onClick: handleManualSync }),
+        el('button', { class: 'sync-btn', type: 'button', 'aria-label': t('syncButton'), onClick: handleManualSync }, [
+          el('span', { text: '🔄' }),
+          el('span', { text: t('syncLabel') }),
+        ]),
       ]),
       langBtns,
     ]),

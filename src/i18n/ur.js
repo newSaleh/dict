@@ -112,6 +112,7 @@ export default {
   copiedToClipboard: 'کاپی ہو گیا',
   installApp: 'ایپ انسٹال کریں',
   syncButton: 'سب سے ڈیٹا اپ ڈیٹ کریں',
+  syncLabel: 'اپ ڈیٹ',
   syncing: 'اپ ڈیٹ ہو رہا ہے…',
   syncDone: 'اپ ڈیٹ ہو گیا',
   syncFailed: 'اپ ڈیٹ ناکام — انٹرنیٹ کنکشن چیک کریں',

@@ -80,9 +80,20 @@ input {
   gap: 4px;
 }
 .sync-btn {
-  font-size: 1rem;
-  width: 34px;
-  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+.sync-btn:hover {
+  background: #eef6f4;
 }
 
 .lang-switch {

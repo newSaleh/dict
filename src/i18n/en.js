@@ -112,6 +112,7 @@ export default {
   copiedToClipboard: 'Copied',
   installApp: 'Install App',
   syncButton: 'Refresh data from everyone',
+  syncLabel: 'Sync',
   syncing: 'Syncing…',
   syncDone: 'Updated',
   syncFailed: 'Could not sync — check your internet connection',
