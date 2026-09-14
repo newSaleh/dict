@@ -13,6 +13,7 @@ import {
   resetToSeed,
 } from './db.js';
 import { getRole, isAdmin, onRoleChange, loginAsAdmin, logout, changeAdminPin, ensurePinInitialized } from './auth.js';
+import { getShowNamesToUsers, setShowNamesToUsers } from './settings.js';
 import { searchSuppliers } from './search.js';
 import { findDuplicates } from './duplicates.js';
 import { exportSuppliersListAsImages } from './export-image.js';
@@ -36,6 +37,10 @@ let editingSupplier = null; // للمسؤول: تعديل مباشر
 let suggestingEditFor = null; // للمستخدم: اقتراح تعديل
 
 const appRoot = document.getElementById('app');
+
+function canSeeNames() {
+  return isAdmin() || getShowNamesToUsers();
+}
 
 async function refreshData() {
   [suppliers, requests] = await Promise.all([getAllSuppliers(), getAllRequests()]);
@@ -157,13 +162,14 @@ function renderSearchView(root) {
       return;
     }
     resultsContainer.appendChild(
-      renderListExportBar(getRole(), results.length, (options) => handleExportList(results, options))
+      renderListExportBar(getRole(), canSeeNames(), results.length, (options) => handleExportList(results, options))
     );
     const list = el('div', { class: 'cards-list' });
     for (const supplier of results) {
       list.appendChild(
         renderSupplierCard(supplier, {
           role: getRole(),
+          canSeeName: canSeeNames(),
           onSuggestEdit: (s) => {
             suggestingEditFor = s;
             currentView = 'edit';
@@ -256,7 +262,7 @@ function renderEditView(root) {
   const form = buildSupplierForm({
     initial: supplier,
     submitLabel: isDirect ? t('save') : t('submitRequest'),
-    showName: isDirect,
+    showName: isDirect || canSeeNames(),
     onSubmit: (data) => handleSupplierSubmit({ mode: 'edit', data, target: supplier }),
   });
   wrap.appendChild(form);
@@ -471,6 +477,23 @@ function renderSettingsView(root) {
   );
 
   if (isAdmin()) {
+    root.appendChild(el('h3', { class: 'section-title', text: t('privacySection') }));
+    const showNamesCheckbox = el('input', {
+      type: 'checkbox',
+      class: 'hide-name-checkbox',
+      checked: getShowNamesToUsers(),
+    });
+    root.appendChild(
+      el('div', { class: 'settings-row' }, [
+        el('label', { class: 'hide-name-label' }, [showNamesCheckbox, ' ' + t('showNamesToUsersOption')]),
+      ])
+    );
+    root.appendChild(el('div', { class: 'hide-name-hint', text: t('showNamesToUsersHint') }));
+    showNamesCheckbox.addEventListener('change', () => {
+      setShowNamesToUsers(showNamesCheckbox.checked);
+      render();
+    });
+
     root.appendChild(el('h3', { class: 'section-title', text: t('changePin') }));
     const newPinInput = el('input', { type: 'password', class: 'input', placeholder: t('newPin'), inputmode: 'numeric' });
     root.appendChild(

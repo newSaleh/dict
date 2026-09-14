@@ -1,7 +1,7 @@
 import { el, clear, formatDate } from './utils.js';
 import { t, getLang } from './i18n.js';
 
-export function renderListExportBar(role, count, onExport) {
+export function renderListExportBar(role, canSeeName, count, onExport) {
   let hideNamesCheckbox = null;
   const children = [];
   if (role === 'admin') {
@@ -12,7 +12,7 @@ export function renderListExportBar(role, count, onExport) {
         el('div', { class: 'hide-name-hint', text: t('hideNamesHint') }),
       ])
     );
-  } else {
+  } else if (!canSeeName) {
     children.push(el('div', { class: 'hide-name-hint names-hidden-notice', text: t('namesHiddenNotice') }));
   }
   children.push(
@@ -20,13 +20,14 @@ export function renderListExportBar(role, count, onExport) {
       class: 'btn btn-outline btn-export-list',
       type: 'button',
       text: t('exportListImage'),
-      onClick: () => onExport({ hideName: role === 'admin' ? hideNamesCheckbox?.checked || false : true }),
+      onClick: () =>
+        onExport({ hideName: role === 'admin' ? hideNamesCheckbox?.checked || false : !canSeeName }),
     })
   );
   return el('div', { class: 'list-export-bar' }, children);
 }
 
-export function renderSupplierCard(supplier, { role, onSuggestEdit, onEdit, onDelete }) {
+export function renderSupplierCard(supplier, { role, canSeeName, onSuggestEdit, onEdit, onDelete }) {
   const codesBlock = el('div', { class: 'card-field' }, [
     el('div', { class: 'field-label', text: t('fieldSupplierCodes') }),
     el(
@@ -42,7 +43,7 @@ export function renderSupplierCard(supplier, { role, onSuggestEdit, onEdit, onDe
   ]);
 
   const nameBlock =
-    role === 'admin'
+    canSeeName
       ? el('div', { class: 'card-field' }, [
           el('div', { class: 'field-label', text: t('fieldSupplierName') }),
           el('div', { class: 'field-value supplier-name', text: supplier.name }),

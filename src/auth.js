@@ -5,7 +5,7 @@ import { sha256Hex } from './utils.js';
 
 const ROLE_KEY = 'sdc_role';
 const PIN_HASH_KEY = 'sdc_admin_pin_hash';
-const DEFAULT_PIN = '1234';
+const DEFAULT_PIN = '1510';
 
 let currentRole = localStorage.getItem(ROLE_KEY) === 'admin' ? 'admin' : 'user';
 const listeners = new Set();
