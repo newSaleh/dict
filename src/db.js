@@ -58,8 +58,11 @@ export async function putSupplier(supplier) {
 }
 
 export async function deleteSupplier(id) {
+  const existing = await getSupplier(id);
   const store = await tx(STORE_SUPPLIERS, 'readwrite');
-  return reqToPromise(store.delete(id));
+  await reqToPromise(store.delete(id));
+  // إذا كان هذا السجل موجودًا في السحابة، يجب حذفه هناك أيضًا عند المزامنة القادمة
+  if (existing?.syncStatus === 'synced') queuePendingCloudDelete(id);
 }
 
 export async function createSupplierApproved({ codes, name, brands, actor }) {
@@ -122,6 +125,7 @@ export async function createRequest({ type, targetSupplierId, proposedData, orig
     reviewedAt: null,
     reviewedBy: null,
     reviewNote: '',
+    syncStatus: 'local',
   };
   await putRequest(request);
   return request;
@@ -135,6 +139,7 @@ export async function reviewRequest(id, { approve, reviewer, note }) {
   request.reviewedAt = nowIso();
   request.reviewedBy = reviewer || 'admin';
   request.reviewNote = note || '';
+  request.syncStatus = 'local';
   await reqToPromise(store.put(request));
 
   if (approve) {
@@ -273,16 +278,94 @@ export function seedData(actor = 'admin') {
   return suppliers;
 }
 
-export async function ensureSeeded() {
-  const existing = await getAllSuppliers();
-  if (existing.length > 0) return false;
-  const store = await tx(STORE_SUPPLIERS, 'readwrite');
-  for (const s of seedData()) await reqToPromise(store.put(s));
-  return true;
-}
-
 export async function resetToSeed() {
   await clearAllSuppliersAndRequests();
   const store = await tx(STORE_SUPPLIERS, 'readwrite');
   for (const s of seedData()) await reqToPromise(store.put(s));
+}
+
+// ---------------- المزامنة السحابية (اختيارية) ----------------
+// كل الدوال هنا تتعامل مع IndexedDB المحلي فقط؛ الاتصال الفعلي بالسحابة
+// موجود في cloud.js وسينادي هذه الدوال قبل/بعد الرفع والسحب.
+
+export async function getUnsyncedSuppliers() {
+  const all = await getAllSuppliers();
+  return all.filter((s) => s.syncStatus !== 'synced');
+}
+
+export async function markSuppliersSynced(ids) {
+  const store = await tx(STORE_SUPPLIERS, 'readwrite');
+  for (const id of ids) {
+    const supplier = await reqToPromise(store.get(id));
+    if (supplier) {
+      supplier.syncStatus = 'synced';
+      await reqToPromise(store.put(supplier));
+    }
+  }
+}
+
+export async function getUnsyncedRequests() {
+  const all = await getAllRequests();
+  return all.filter((r) => r.syncStatus !== 'synced');
+}
+
+export async function markRequestsSynced(ids) {
+  const store = await tx(STORE_REQUESTS, 'readwrite');
+  for (const id of ids) {
+    const request = await reqToPromise(store.get(id));
+    if (request) {
+      request.syncStatus = 'synced';
+      await reqToPromise(store.put(request));
+    }
+  }
+}
+
+// دمج بيانات الموردين القادمة من السحابة مع المحلية: تحديث/إضافة، وحذف أي
+// سجل محلي كان معروفًا أنه متزامن (synced) واختفى الآن من السحابة (يعني أن
+// مسؤولًا آخر حذفه من جهاز آخر). السجلات المحلية غير المتزامنة بعد لا تُمس.
+export async function mergeCloudSuppliers(cloudSuppliers) {
+  const store = await tx(STORE_SUPPLIERS, 'readwrite');
+  const local = await reqToPromise(store.getAll());
+  const cloudIds = new Set(cloudSuppliers.map((s) => s.id));
+
+  for (const cloudSupplier of cloudSuppliers) {
+    const existing = local.find((s) => s.id === cloudSupplier.id);
+    const merged = { ...existing, ...cloudSupplier, syncStatus: 'synced' };
+    await reqToPromise(store.put(merged));
+  }
+  for (const localSupplier of local) {
+    if (localSupplier.syncStatus === 'synced' && !cloudIds.has(localSupplier.id)) {
+      await reqToPromise(store.delete(localSupplier.id));
+    }
+  }
+}
+
+export async function mergeCloudRequests(cloudRequests) {
+  const store = await tx(STORE_REQUESTS, 'readwrite');
+  for (const cloudRequest of cloudRequests) {
+    await reqToPromise(store.put({ ...cloudRequest, syncStatus: 'synced' }));
+  }
+}
+
+const PENDING_DELETES_KEY = 'sdc_pending_cloud_deletes';
+
+export function queuePendingCloudDelete(id) {
+  const list = getPendingCloudDeletes();
+  if (!list.includes(id)) {
+    list.push(id);
+    localStorage.setItem(PENDING_DELETES_KEY, JSON.stringify(list));
+  }
+}
+
+export function getPendingCloudDeletes() {
+  try {
+    return JSON.parse(localStorage.getItem(PENDING_DELETES_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function clearPendingCloudDelete(id) {
+  const list = getPendingCloudDeletes().filter((x) => x !== id);
+  localStorage.setItem(PENDING_DELETES_KEY, JSON.stringify(list));
 }

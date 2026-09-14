@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// قواعد الحماية لمركز بيانات الموردين.
+// المبدأ: اسم المورد لا يُرسل إطلاقًا لأي جهاز غير مصرّح له (وليس مجرد إخفاء
+// في الواجهة)، لأن اسم المورد مخزَّن في مجموعة منفصلة (supplierNames) لها
+// قواعد قراءة مستقلة عن بيانات المورد الأساسية (suppliers).
+//
+// "الأدمن" هنا ليس حساب مستخدم حقيقي، بل أي متصفح أثبت أنه يعرف كلمة مرور
+// المسؤول عبر إنشاء مستند في admins/{uid} (uid من Firebase Anonymous Auth).
+// كلمة المرور نفسها محفوظة في adminSecret/config الذي لا يُقرأ ولا يُكتب من
+// أي عميل إطلاقًا — يُنشأ ويُعدَّل يدويًا من لوحة تحكم Firebase فقط.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function namesVisibleToEveryone() {
+      return get(/databases/$(database)/documents/settings/global).data.showNamesToUsers == true;
+    }
+
+    // بيانات المورد المعتمدة (بدون اسم المورد) — يقرؤها الجميع
+    match /suppliers/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // اسم المورد فقط، بمعرّف مطابق للمورد في suppliers/{id}
+    match /supplierNames/{id} {
+      allow read: if isAdmin() || namesVisibleToEveryone();
+      allow write: if isAdmin();
+    }
+
+    // طلبات الإضافة/التعديل: أي شخص يمكنه إرسال طلب، لكن قراءة القائمة
+    // ومراجعتها (اعتماد/رفض) للمسؤول فقط لأنها قد تحتوي أسماء مقترحة
+    match /pendingRequests/{id} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // إعدادات عامة (مثل إظهار/إخفاء الأسماء) — يقرؤها الجميع، يكتبها المسؤول فقط
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // كلمة مرور المسؤول — لا قراءة ولا كتابة من أي عميل مطلقًا.
+    // تُدار يدويًا من لوحة تحكم Firebase فقط.
+    match /adminSecret/{id} {
+      allow read, write: if false;
+    }
+
+    // منح صلاحية المسؤول لهذا الجهاز: يُسمح بالإنشاء فقط إذا كانت كلمة
+    // المرور المُرسلة مطابقة للمخزّنة، ويُسمح بحذف الجهاز لصلاحيته الخاصة
+    // فقط (تسجيل الخروج). لا تعديل لاحقًا لمنع تمديد الصلاحية بدون كلمة مرور.
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.pin == get(/databases/$(database)/documents/adminSecret/config).data.pin;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow update: if false;
+    }
+  }
+}

@@ -1,6 +1,5 @@
 import { initI18n, t, setLang, getLang, SUPPORTED_LANGS, DICTS, onLangChange } from './i18n.js';
 import {
-  ensureSeeded,
   getAllSuppliers,
   getAllRequests,
   createSupplierApproved,
@@ -12,7 +11,16 @@ import {
   importAllData,
   resetToSeed,
 } from './db.js';
-import { getRole, isAdmin, onRoleChange, loginAsAdmin, logout, changeAdminPin, ensurePinInitialized } from './auth.js';
+import {
+  getRole,
+  isAdmin,
+  onRoleChange,
+  loginAsAdmin,
+  logout,
+  changeAdminPin,
+  ensurePinInitialized,
+  ensureCloudAdminGrant,
+} from './auth.js';
 import { getShowNamesToUsers, setShowNamesToUsers } from './settings.js';
 import { searchSuppliers } from './search.js';
 import { findDuplicates } from './duplicates.js';
@@ -35,11 +43,68 @@ let requests = [];
 let currentView = 'search';
 let editingSupplier = null; // للمسؤول: تعديل مباشر
 let suggestingEditFor = null; // للمستخدم: اقتراح تعديل
+let lastSearchQuery = ''; // للحفاظ على نص البحث عند إعادة رسم الصفحة (مثلًا بعد مزامنة في الخلفية)
+let restoreFocusToSearch = false;
 
 const appRoot = document.getElementById('app');
 
 function canSeeNames() {
   return isAdmin() || getShowNamesToUsers();
+}
+
+let syncInProgress = false;
+let anotherSyncRequested = false;
+
+// مزامنة صامتة في الخلفية: لا تُقاطع المستخدم، وتُحدّث الشاشة فقط إن نجحت.
+// تُستخدم بعد أي تعديل محلي (إن توفر إنترنت) وعند بدء التطبيق. إذا استُدعيت
+// أثناء تنفيذ مزامنة سابقة، لا تُهمَل: تُعاد تلقائيًا بعد انتهاء الحالية حتى
+// لا يضيع تعديل حدث في تلك اللحظة (مثل حفظ متأخر لطلب لم يُرفع بعد).
+async function triggerBackgroundSync() {
+  if (!navigator.onLine) return;
+  if (syncInProgress) {
+    anotherSyncRequested = true;
+    return;
+  }
+  syncInProgress = true;
+  try {
+    const { syncNow } = await import('./sync.js');
+    await syncNow();
+    await refreshData();
+    render();
+  } catch {
+    // لا بأس، التطبيق يعمل محليًا بدون مشاكل، سيُعاد المحاولة لاحقًا
+  } finally {
+    syncInProgress = false;
+    if (anotherSyncRequested) {
+      anotherSyncRequested = false;
+      triggerBackgroundSync();
+    }
+  }
+}
+
+async function handleManualSync() {
+  if (!navigator.onLine) {
+    toast(t('syncOffline'));
+    return;
+  }
+  if (syncInProgress) return;
+  syncInProgress = true;
+  toast(t('syncing'));
+  try {
+    const { syncNow } = await import('./sync.js');
+    const result = await syncNow();
+    await refreshData();
+    render();
+    if (result.errors.length && !result.pulledSuppliers && !result.pushedSuppliers && !result.pushedRequests) {
+      toast(t('syncFailed'));
+    } else {
+      toast(t('syncDone'));
+    }
+  } catch {
+    toast(t('syncFailed'));
+  } finally {
+    syncInProgress = false;
+  }
 }
 
 async function refreshData() {
@@ -61,6 +126,7 @@ function navigate(view) {
 }
 
 function render() {
+  restoreFocusToSearch = !!document.activeElement?.classList?.contains('search-input');
   clear(appRoot);
   appRoot.appendChild(renderHeader());
   appRoot.appendChild(renderNav());
@@ -93,7 +159,10 @@ function renderHeader() {
 
   return el('header', { class: 'app-header' }, [
     el('div', { class: 'app-header-top' }, [
-      el('span', { class: `status-dot ${online ? 'online' : 'offline'}`, text: online ? t('onlineBadge') : t('offlineBadge') }),
+      el('div', { class: 'status-sync-group' }, [
+        el('span', { class: `status-dot ${online ? 'online' : 'offline'}`, text: online ? t('onlineBadge') : t('offlineBadge') }),
+        el('button', { class: 'icon-btn sync-btn', type: 'button', 'aria-label': t('syncButton'), text: '🔄', onClick: handleManualSync }),
+      ]),
       langBtns,
     ]),
     el('h1', { class: 'app-title', text: t('appTitle') }),
@@ -142,6 +211,7 @@ function renderSearchView(root) {
     class: 'search-input',
     placeholder: t('searchPlaceholder'),
     autofocus: true,
+    value: lastSearchQuery,
     'aria-label': t('searchPlaceholder'),
   });
   const hint = el('div', { class: 'search-hint', text: t('searchHint') });
@@ -152,7 +222,16 @@ function renderSearchView(root) {
   root.appendChild(searchWrap);
   root.appendChild(resultsContainer);
 
+  if (restoreFocusToSearch) {
+    setTimeout(() => {
+      input.focus();
+      const pos = input.value.length;
+      input.setSelectionRange?.(pos, pos);
+    }, 0);
+  }
+
   function update() {
+    lastSearchQuery = input.value;
     const active = suppliers.filter((s) => s.status !== 'deleted');
     const results = searchSuppliers(active, input.value);
     clear(resultsContainer);
@@ -217,6 +296,7 @@ async function handleDeleteSupplier(supplier) {
           closeModal();
           toast(t('approved'));
           render();
+          triggerBackgroundSync();
         },
       },
     ],
@@ -333,6 +413,7 @@ async function finalizeSubmit({ mode, data, target }) {
 
   await refreshData();
   showSubmitConfirmation(admin);
+  triggerBackgroundSync();
 }
 
 function showSubmitConfirmation(admin) {
@@ -394,6 +475,7 @@ function handleApprove(request) {
           closeModal();
           toast(t('approved'));
           render();
+          triggerBackgroundSync();
         },
       },
     ],
@@ -416,6 +498,7 @@ function handleReject(request) {
           closeModal();
           toast(t('rejected'));
           render();
+          triggerBackgroundSync();
         },
       },
     ],
@@ -440,6 +523,8 @@ function handleLoginPrompt() {
           if (ok) {
             closeModal();
             render();
+            await ensureCloudAdminGrant(pinInput.value);
+            triggerBackgroundSync();
           } else {
             errorMsg.hidden = false;
           }
@@ -492,6 +577,7 @@ function renderSettingsView(root) {
     showNamesCheckbox.addEventListener('change', () => {
       setShowNamesToUsers(showNamesCheckbox.checked);
       render();
+      triggerBackgroundSync();
     });
 
     root.appendChild(el('h3', { class: 'section-title', text: t('changePin') }));
@@ -598,13 +684,16 @@ function handleSeedReset() {
 async function boot() {
   initI18n();
   await ensurePinInitialized();
-  await ensureSeeded();
   await refreshData();
   onLangChange(() => render());
   onRoleChange(() => render());
-  window.addEventListener('online', render);
+  window.addEventListener('online', () => {
+    render();
+    triggerBackgroundSync();
+  });
   window.addEventListener('offline', render);
   render();
+  triggerBackgroundSync();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js').catch((err) => console.warn('SW registration failed', err));

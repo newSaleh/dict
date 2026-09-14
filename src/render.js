@@ -224,7 +224,7 @@ export function buildSupplierForm({ initial, onSubmit, submitLabel, showName = t
       .map((row) => row._get())
       .filter(Boolean);
 
-    if (!name) return showError(t('requiredField'));
+    if (showName && !name) return showError(t('requiredField'));
     if (!codes.length) return showError(t('atLeastOneCode'));
     if (!brands.length) return showError(t('atLeastOneBrand'));
     hideError();

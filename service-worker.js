@@ -1,7 +1,7 @@
 // يجعل التطبيق يعمل بالكامل بدون إنترنت (Offline First):
 // كل ملفات الواجهة تُخزَّن محليًا عند أول زيارة، والبيانات نفسها مخزّنة في IndexedDB
 // (انظر src/db.js) وليس لها علاقة بهذا الملف.
-const CACHE_VERSION = 'sdc-v5';
+const CACHE_VERSION = 'sdc-v6';
 const APP_SHELL = [
   './',
   './index.html',
@@ -21,8 +21,14 @@ const APP_SHELL = [
   './src/render.js',
   './src/modal.js',
   './src/utils.js',
+  './src/sync.js',
+  './src/cloud.js',
+  './src/firebase-config.js',
   './icons/icon.svg',
 ];
+// ملاحظة: مكتبة Firebase نفسها (gstatic.com) لا تُدرج هنا عمدًا — لو فشل
+// تحميلها لأي سبب أثناء أول تثبيت لهذا التطبيق، يجب ألا يمنع ذلك تخزين بقية
+// التطبيق (المزامنة السحابية اختيارية، وباقي التطبيق يجب أن يبقى يعمل بدونها).
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
