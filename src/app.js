@@ -711,7 +711,20 @@ async function boot() {
   triggerBackgroundSync();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch((err) => console.warn('SW registration failed', err));
+    navigator.serviceWorker
+      .register('./service-worker.js')
+      .then((reg) => reg.update())
+      .catch((err) => console.warn('SW registration failed', err));
+
+    // بمجرد أن يتولى Service Worker جديد التحكم (بعد نشر تحديث)، أعد تحميل
+    // الصفحة تلقائيًا مرة واحدة حتى يحصل المستخدم على أحدث نسخة دون أي إجراء
+    // يدوي منه (تفريغ الذاكرة المؤقتة، إغلاق وإعادة فتح...).
+    let reloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloadedForUpdate) return;
+      reloadedForUpdate = true;
+      window.location.reload();
+    });
   }
 }
 
