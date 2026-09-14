@@ -1,7 +1,7 @@
 // يجعل التطبيق يعمل بالكامل بدون إنترنت (Offline First):
 // كل ملفات الواجهة تُخزَّن محليًا عند أول زيارة، والبيانات نفسها مخزّنة في IndexedDB
 // (انظر src/db.js) وليس لها علاقة بهذا الملف.
-const CACHE_VERSION = 'sdc-v4';
+const CACHE_VERSION = 'sdc-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const APP_SHELL = [
   './src/i18n/ur.js',
   './src/search.js',
   './src/auth.js',
+  './src/settings.js',
   './src/duplicates.js',
   './src/export-image.js',
   './src/render.js',
