@@ -9,6 +9,7 @@ export default {
   navAdd: 'نیا سپلائر شامل کریں',
   navReview: 'جائزہ',
   navSettings: 'ترتیبات',
+  navHome: 'مرکزی صفحہ',
   navSupplierList: 'سپلائرز کی فہرست',
   menuButton: 'مینو',
   closeMenuLabel: 'مینو بند کریں',

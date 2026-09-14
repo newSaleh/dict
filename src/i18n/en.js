@@ -9,6 +9,7 @@ export default {
   navAdd: 'Add Supplier',
   navReview: 'Review',
   navSettings: 'Settings',
+  navHome: 'Home',
   navSupplierList: 'Supplier List',
   menuButton: 'Menu',
   closeMenuLabel: 'Close menu',

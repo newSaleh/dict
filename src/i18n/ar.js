@@ -9,6 +9,7 @@ export default {
   navAdd: 'إضافة مورد',
   navReview: 'المراجعة',
   navSettings: 'الإعدادات',
+  navHome: 'الصفحة الرئيسية',
   navSupplierList: 'قائمة الموردين',
   menuButton: 'القائمة',
   closeMenuLabel: 'إغلاق القائمة',

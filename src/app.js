@@ -220,6 +220,13 @@ function navigate(view) {
   render();
 }
 
+// يعيد المستخدم إلى الصفحة الرئيسية بمربع بحث فارغ وبدون أي نتائج ظاهرة،
+// حتى لو كان قد بحث عن شيء قبل مغادرتها
+function goHome() {
+  lastHomeQuery = '';
+  navigate('home');
+}
+
 function render() {
   restoreFocusToSearch = !!document.activeElement?.classList?.contains('search-input');
   clear(appRoot);
@@ -311,6 +318,7 @@ function renderMenuOverlay() {
     ]);
   }
 
+  sheet.appendChild(menuItem({ icon: '🏠', label: t('navHome'), onClick: goHome }));
   sheet.appendChild(menuItem({ icon: '📋', label: t('navSupplierList'), onClick: () => navigate('list') }));
   sheet.appendChild(menuItem({ icon: '➕', label: t('navAdd'), onClick: () => navigate('add') }));
   if (isAdmin()) {
