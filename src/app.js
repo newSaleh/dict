@@ -52,6 +52,73 @@ function canSeeNames() {
   return isAdmin() || getShowNamesToUsers();
 }
 
+// أرقام موردي الرياض المقابلة لأرقامهم في جدة، حسب القائمة التي زوّدنا بها
+// المسؤول. إن وُجد رقم الرياض لدى مورد، يُضاف رقم جدة المقابل بمدينة "جدة".
+const RUH_TO_JED_CODE_MAP = {
+  '0180': '0252',
+  '0183': '0284',
+  '0182': '0271',
+  '0160': '0202',
+  '0137': '0240',
+  '0181': '0203',
+  '0158': '0246',
+  '0145': '0253',
+  '0117': '0251',
+  '0115': '0201',
+  '0198': '0434',
+  '0317': '0459',
+  '0310': '0430',
+  '0103': '0218',
+  '0306': '0416',
+  '0309': '0444',
+  '0302': '0436',
+  '0104': '0221',
+  '0318': '0230',
+  '0106': '0247',
+  '0165': '0428',
+  '0319': '0447',
+  '0161': '0401',
+  '0178': '0293',
+  '0184': '0297',
+  '0179': '0407',
+  '0159': '0402',
+  '0108': '0299',
+};
+
+async function handleApplyCityMapping() {
+  let updatedCount = 0;
+  let addedCount = 0;
+  let conflictCount = 0;
+  for (const supplier of suppliers) {
+    const existingCodes = supplier.codes || [];
+    const codesToAdd = [];
+    for (const c of existingCodes) {
+      const jedCode = RUH_TO_JED_CODE_MAP[(c.code || '').trim()];
+      if (!jedCode) continue;
+      const alreadyHasIt =
+        existingCodes.some((ec) => ec.code.trim() === jedCode) || codesToAdd.some((ec) => ec.code === jedCode);
+      if (alreadyHasIt) continue;
+      const conflictsWithOther = suppliers.some(
+        (s) => s.id !== supplier.id && (s.codes || []).some((ec) => ec.code.trim() === jedCode)
+      );
+      if (conflictsWithOther) {
+        conflictCount += 1;
+        continue;
+      }
+      codesToAdd.push({ code: jedCode, city: 'جدة' });
+    }
+    if (codesToAdd.length) {
+      await updateSupplierApproved(supplier.id, { codes: [...existingCodes, ...codesToAdd] }, 'admin');
+      updatedCount += 1;
+      addedCount += codesToAdd.length;
+    }
+  }
+  await refreshData();
+  render();
+  toast(t('cityMappingDone', { updated: updatedCount, added: addedCount }) + (conflictCount ? ' ' + t('cityMappingConflicts', { count: conflictCount }) : ''));
+  triggerBackgroundSync();
+}
+
 let syncInProgress = false;
 let anotherSyncRequested = false;
 
@@ -645,6 +712,19 @@ function renderSettingsView(root) {
           type: 'button',
           text: t('seedReset'),
           onClick: handleSeedReset,
+        }),
+      ])
+    );
+
+    root.appendChild(el('h3', { class: 'section-title', text: t('cityMappingTitle') }));
+    root.appendChild(el('p', { class: 'hide-name-hint', text: t('cityMappingHint') }));
+    root.appendChild(
+      el('div', { class: 'settings-row' }, [
+        el('button', {
+          class: 'btn btn-outline',
+          type: 'button',
+          text: t('applyCityMapping'),
+          onClick: handleApplyCityMapping,
         }),
       ])
     );

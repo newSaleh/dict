@@ -122,4 +122,9 @@ export default {
   requestType_add: 'إضافة مورد جديد',
   requestType_edit: 'تعديل بيانات مورد',
   back: 'رجوع',
+  cityMappingTitle: 'ربط أكواد الرياض بجدة',
+  cityMappingHint: 'يفحص كل الموردين، وإن وجد لدى المورد رقمًا من أرقام الرياض المعروفة، يضيف له رقم جدة المقابل تلقائيًا.',
+  applyCityMapping: 'تطبيق ربط الأكواد',
+  cityMappingDone: 'تم تحديث {updated} مورد وإضافة {added} رقم جدة.',
+  cityMappingConflicts: 'وتم تجاوز {count} لأن الرقم مستخدم لدى مورد آخر.',
 };

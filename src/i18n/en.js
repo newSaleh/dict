@@ -122,4 +122,9 @@ export default {
   requestType_add: 'New supplier',
   requestType_edit: 'Supplier edit',
   back: 'Back',
+  cityMappingTitle: 'Link Riyadh codes to Jeddah',
+  cityMappingHint: 'Scans all suppliers, and for any known Riyadh code found, automatically adds the matching Jeddah code.',
+  applyCityMapping: 'Apply code linking',
+  cityMappingDone: 'Updated {updated} supplier(s) and added {added} Jeddah code(s).',
+  cityMappingConflicts: '{count} skipped because the code is already used by another supplier.',
 };

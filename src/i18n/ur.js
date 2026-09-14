@@ -122,4 +122,9 @@ export default {
   requestType_add: 'نیا سپلائر',
   requestType_edit: 'سپلائر ترمیم',
   back: 'واپس',
+  cityMappingTitle: 'ریاض کوڈز کو جدہ سے جوڑیں',
+  cityMappingHint: 'تمام سپلائرز کو چیک کرتا ہے، اور اگر کسی سپلائر کے پاس معروف ریاض کوڈز میں سے کوئی ہو تو خودکار طور پر متعلقہ جدہ کوڈ شامل کر دیتا ہے۔',
+  applyCityMapping: 'کوڈ ربط لاگو کریں',
+  cityMappingDone: '{updated} سپلائرز اپ ڈیٹ ہوئے اور {added} جدہ کوڈز شامل کیے گئے۔',
+  cityMappingConflicts: '{count} کو نظر انداز کیا گیا کیونکہ یہ کوڈ پہلے سے کسی اور سپلائر کے پاس موجود ہے۔',
 };
