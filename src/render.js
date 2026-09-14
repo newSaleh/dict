@@ -12,13 +12,15 @@ export function renderListExportBar(role, count, onExport) {
         el('div', { class: 'hide-name-hint', text: t('hideNamesHint') }),
       ])
     );
+  } else {
+    children.push(el('div', { class: 'hide-name-hint names-hidden-notice', text: t('namesHiddenNotice') }));
   }
   children.push(
     el('button', {
       class: 'btn btn-outline btn-export-list',
       type: 'button',
       text: t('exportListImage'),
-      onClick: () => onExport({ hideName: hideNamesCheckbox?.checked || false }),
+      onClick: () => onExport({ hideName: role === 'admin' ? hideNamesCheckbox?.checked || false : true }),
     })
   );
   return el('div', { class: 'list-export-bar' }, children);
@@ -39,10 +41,13 @@ export function renderSupplierCard(supplier, { role, onSuggestEdit, onEdit, onDe
     ),
   ]);
 
-  const nameBlock = el('div', { class: 'card-field' }, [
-    el('div', { class: 'field-label', text: t('fieldSupplierName') }),
-    el('div', { class: 'field-value supplier-name', text: supplier.name }),
-  ]);
+  const nameBlock =
+    role === 'admin'
+      ? el('div', { class: 'card-field' }, [
+          el('div', { class: 'field-label', text: t('fieldSupplierName') }),
+          el('div', { class: 'field-value supplier-name', text: supplier.name }),
+        ])
+      : null;
 
   const brandsBlock = el('div', { class: 'card-field' }, [
     el('div', { class: 'field-label', text: t('fieldBrands') }),
@@ -94,14 +99,16 @@ export function renderEmptyState(hasQuery) {
 
 // ------- نموذج إضافة / تعديل مورد -------
 
-export function buildSupplierForm({ initial, onSubmit, submitLabel }) {
-  const nameInput = el('input', {
-    type: 'text',
-    class: 'input',
-    placeholder: t('addNamePlaceholder'),
-    value: initial?.name || '',
-    required: true,
-  });
+export function buildSupplierForm({ initial, onSubmit, submitLabel, showName = true }) {
+  const nameInput = showName
+    ? el('input', {
+        type: 'text',
+        class: 'input',
+        placeholder: t('addNamePlaceholder'),
+        value: initial?.name || '',
+        required: true,
+      })
+    : null;
 
   const codesContainer = el('div', { class: 'dynamic-rows' });
   const brandsContainer = el('div', { class: 'dynamic-rows' });
@@ -177,8 +184,9 @@ export function buildSupplierForm({ initial, onSubmit, submitLabel }) {
   const errorBox = el('div', { class: 'form-error', hidden: true });
 
   const form = el('form', { class: 'supplier-form' }, [
-    el('label', { class: 'form-label', text: t('fieldSupplierName') }),
+    showName ? el('label', { class: 'form-label', text: t('fieldSupplierName') }) : null,
     nameInput,
+    !showName ? el('div', { class: 'name-hidden-note', text: t('nameHiddenNote') }) : null,
 
     el('label', { class: 'form-label', text: t('fieldSupplierCodes') }),
     codesContainer,
@@ -207,7 +215,7 @@ export function buildSupplierForm({ initial, onSubmit, submitLabel }) {
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = nameInput.value.trim();
+    const name = showName ? nameInput.value.trim() : initial?.name || '';
     const codes = Array.from(codesContainer.children)
       .map((row) => row._get())
       .filter((c) => c.code);

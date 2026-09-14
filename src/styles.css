@@ -400,6 +400,13 @@ input {
   margin-bottom: 16px;
 }
 
+.name-hidden-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: -6px;
+  margin-bottom: 8px;
+}
+
 .form-label {
   display: block;
   font-weight: 700;

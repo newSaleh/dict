@@ -31,6 +31,8 @@ export default {
   removeItem: 'حذف',
   hideNamesOnExport: 'إخفاء أسماء الموردين',
   hideNamesHint: 'يظهر هذا فقط في الصورة الناتجة بعد الضغط على "تصدير القائمة كصورة"، ولا يغيّر شيئًا في الشاشة نفسها.',
+  namesHiddenNotice: '🔒 أسماء الموردين غير ظاهرة حفاظًا على سريتها',
+  nameHiddenNote: '🔒 اسم المورد مخفي ولن يتغير بهذا الطلب',
   imagesReady: 'تم إنشاء الصورة بنجاح',
   exportListImage: '📷 تصدير القائمة كصورة',
   generatingImages: 'جارِ إنشاء الصور…',

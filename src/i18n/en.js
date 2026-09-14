@@ -31,6 +31,8 @@ export default {
   removeItem: 'Remove',
   hideNamesOnExport: 'Hide supplier names',
   hideNamesHint: 'This only affects the image produced after pressing "Export list as image" — nothing changes on screen.',
+  namesHiddenNotice: '🔒 Supplier names are hidden to protect confidentiality',
+  nameHiddenNote: '🔒 The supplier name is hidden and will not change with this request',
   imagesReady: 'Image saved successfully',
   exportListImage: '📷 Export list as image',
   generatingImages: 'Generating images…',

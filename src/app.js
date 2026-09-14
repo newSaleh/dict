@@ -256,6 +256,7 @@ function renderEditView(root) {
   const form = buildSupplierForm({
     initial: supplier,
     submitLabel: isDirect ? t('save') : t('submitRequest'),
+    showName: isDirect,
     onSubmit: (data) => handleSupplierSubmit({ mode: 'edit', data, target: supplier }),
   });
   wrap.appendChild(form);
