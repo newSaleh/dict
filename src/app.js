@@ -87,7 +87,10 @@ async function handleManualSync() {
     toast(t('syncOffline'));
     return;
   }
-  if (syncInProgress) return;
+  if (syncInProgress) {
+    toast(t('syncing'));
+    return;
+  }
   syncInProgress = true;
   toast(t('syncing'));
   try {
@@ -96,15 +99,24 @@ async function handleManualSync() {
     await refreshData();
     render();
     if (result.errors.length && !result.pulledSuppliers && !result.pushedSuppliers && !result.pushedRequests) {
-      toast(t('syncFailed'));
+      showSyncErrorDetails(result.errors);
     } else {
       toast(t('syncDone'));
     }
-  } catch {
-    toast(t('syncFailed'));
+  } catch (err) {
+    showSyncErrorDetails([err]);
   } finally {
     syncInProgress = false;
   }
+}
+
+function showSyncErrorDetails(errors) {
+  const messages = [...new Set(errors.map((e) => String(e?.message || e)))];
+  openModal({
+    title: t('syncFailed'),
+    body: messages.map((m) => el('p', { class: 'sync-error-text', text: m })),
+    actions: [{ label: t('close'), variant: 'btn-primary', onClick: closeModal }],
+  });
 }
 
 async function refreshData() {

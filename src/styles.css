@@ -610,6 +610,18 @@ input {
   font-weight: 700;
   font-size: 1.1rem;
 }
+.sync-error-text {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--danger);
+  background: #fdf2f1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
 .modal-footer {
   display: flex;
   gap: 10px;
