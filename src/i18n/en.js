@@ -61,6 +61,8 @@ export default {
   possibleDuplicateTitle: '⚠️ This supplier might already exist',
   possibleDuplicateCode: 'Supplier code "{code}" is already used by another supplier:',
   possibleDuplicateName: 'A very similar name already exists:',
+  possibleDuplicateBrand: 'Brand "{brand}" is already used by another supplier:',
+  importDuplicatesFound: 'Found {count} possible duplicate(s) in the import file. Review before continuing:',
   continueAnyway: 'Continue anyway',
   goBackAndEdit: 'Go back and edit',
   reviewTitle: 'Review Center',

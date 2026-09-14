@@ -61,6 +61,8 @@ export default {
   possibleDuplicateTitle: '⚠️ ممکن ہے یہ سپلائر پہلے سے موجود ہو',
   possibleDuplicateCode: 'سپلائر نمبر "{code}" پہلے سے دوسرے سپلائر کے پاس موجود ہے:',
   possibleDuplicateName: 'اس سے ملتا جلتا نام پہلے سے موجود ہے:',
+  possibleDuplicateBrand: 'برانڈ "{brand}" پہلے سے دوسرے سپلائر کے پاس موجود ہے:',
+  importDuplicatesFound: 'درآمد فائل میں {count} ممکنہ تکرار ملے۔ جاری رکھنے سے پہلے جائزہ لیں:',
   continueAnyway: 'بہرحال جاری رکھیں',
   goBackAndEdit: 'واپس جا کر تبدیل کریں',
   reviewTitle: 'جائزہ مرکز',

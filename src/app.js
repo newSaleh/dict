@@ -369,16 +369,16 @@ function renderEditView(root) {
 
 function handleSupplierSubmit({ mode, data, target }) {
   const excludeId = mode === 'edit' ? target.id : null;
-  const { codeConflicts, nameConflicts } = findDuplicates(suppliers, data, excludeId);
+  const { codeConflicts, nameConflicts, brandConflicts } = findDuplicates(suppliers, data, excludeId);
 
-  if (codeConflicts.length || nameConflicts.length) {
-    showDuplicateWarning({ codeConflicts, nameConflicts, onContinue: () => finalizeSubmit({ mode, data, target }) });
+  if (codeConflicts.length || nameConflicts.length || brandConflicts.length) {
+    showDuplicateWarning({ codeConflicts, nameConflicts, brandConflicts, onContinue: () => finalizeSubmit({ mode, data, target }) });
   } else {
     finalizeSubmit({ mode, data, target });
   }
 }
 
-function showDuplicateWarning({ codeConflicts, nameConflicts, onContinue }) {
+function showDuplicateWarning({ codeConflicts, nameConflicts, brandConflicts, onContinue }) {
   const body = [];
   for (const c of codeConflicts) {
     body.push(el('p', { class: 'warning-text', text: t('possibleDuplicateCode', { code: c.code }) }));
@@ -387,6 +387,10 @@ function showDuplicateWarning({ codeConflicts, nameConflicts, onContinue }) {
   for (const n of nameConflicts) {
     body.push(el('p', { class: 'warning-text', text: t('possibleDuplicateName') }));
     body.push(el('p', { class: 'warning-supplier', text: n.supplier.name }));
+  }
+  for (const b of brandConflicts) {
+    body.push(el('p', { class: 'warning-text', text: t('possibleDuplicateBrand', { brand: b.brand }) }));
+    body.push(el('p', { class: 'warning-supplier', text: b.supplier.name || b.supplier.codes?.[0]?.code || '' }));
   }
   openModal({
     title: t('possibleDuplicateTitle'),
@@ -664,14 +668,77 @@ async function handleImportData(e) {
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-    await importAllData(data);
-    await refreshData();
-    toast(t('save'));
-    render();
+    if (!Array.isArray(data.suppliers)) throw new Error('Invalid data file');
+
+    const conflicts = findImportConflicts(data.suppliers);
+    if (conflicts.length) {
+      showImportDuplicatesWarning(conflicts, () => finalizeImport(data));
+    } else {
+      await finalizeImport(data);
+    }
   } catch (err) {
     console.error(err);
     toast(String(err.message || err));
+  } finally {
+    e.target.value = '';
   }
+}
+
+// يفحص كل مورد في ملف الاستيراد مقابل الموردين الحاليين ومقابل بعضهم البعض
+// (حتى لا يفوتنا تكرار بين سجلين ضمن نفس الملف المستورَد)
+function findImportConflicts(incomingSuppliers) {
+  const conflicts = [];
+  const referencePool = [...suppliers];
+  const existingIds = new Set(suppliers.map((s) => s.id));
+  for (const incoming of incomingSuppliers) {
+    // معرّف موجود مسبقًا يعني هذا تحديث/استعادة نسخة احتياطية لنفس السجل،
+    // وليس موردًا جديدًا يُحتمل أن يكون مكررًا
+    if (!existingIds.has(incoming.id)) {
+      const { codeConflicts, nameConflicts, brandConflicts } = findDuplicates(referencePool, incoming, incoming.id);
+      if (codeConflicts.length || nameConflicts.length || brandConflicts.length) {
+        conflicts.push({ incoming, codeConflicts, nameConflicts, brandConflicts });
+      }
+    }
+    referencePool.push(incoming);
+  }
+  return conflicts;
+}
+
+function showImportDuplicatesWarning(conflicts, onContinue) {
+  const body = [el('p', { class: 'warning-text', text: t('importDuplicatesFound', { count: conflicts.length }) })];
+  for (const c of conflicts) {
+    const label = c.incoming.name || c.incoming.codes?.[0]?.code || '';
+    const reasons = [
+      ...c.codeConflicts.map((x) => t('possibleDuplicateCode', { code: x.code })),
+      ...c.nameConflicts.map(() => t('possibleDuplicateName')),
+      ...c.brandConflicts.map((x) => t('possibleDuplicateBrand', { brand: x.brand })),
+    ];
+    body.push(el('p', { class: 'warning-supplier', text: label }));
+    body.push(el('p', { class: 'warning-text', text: reasons.join(' / ') }));
+  }
+  openModal({
+    title: t('possibleDuplicateTitle'),
+    body,
+    actions: [
+      { label: t('cancel'), variant: 'btn-secondary', onClick: closeModal },
+      {
+        label: t('continueAnyway'),
+        variant: 'btn-primary',
+        onClick: () => {
+          closeModal();
+          onContinue();
+        },
+      },
+    ],
+  });
+}
+
+async function finalizeImport(data) {
+  await importAllData(data);
+  await refreshData();
+  toast(t('save'));
+  render();
+  triggerBackgroundSync();
 }
 
 function handleSeedReset() {

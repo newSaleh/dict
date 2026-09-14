@@ -61,6 +61,8 @@ export default {
   possibleDuplicateTitle: '⚠️ قد يكون هذا المورد موجودًا بالفعل',
   possibleDuplicateCode: 'رقم المورد "{code}" مستخدم بالفعل لدى مورد آخر:',
   possibleDuplicateName: 'يوجد اسم مشابه جدًا لهذا المورد:',
+  possibleDuplicateBrand: 'الماركة "{brand}" مستخدمة بالفعل لدى مورد آخر:',
+  importDuplicatesFound: 'وجدت {count} تكرارًا محتملًا في ملف الاستيراد. راجعها قبل المتابعة:',
   continueAnyway: 'المتابعة رغم ذلك',
   goBackAndEdit: 'الرجوع والتعديل',
   reviewTitle: 'مركز المراجعة',
