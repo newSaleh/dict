@@ -777,22 +777,22 @@ function renderSettingsView(root) {
 
   if (isAdmin()) {
     root.appendChild(el('h3', { class: 'section-title', text: t('privacySection') }));
-    const showNamesCheckbox = el('input', {
-      type: 'checkbox',
-      class: 'hide-name-checkbox',
-      checked: getShowNamesToUsers(),
+    const showNamesBtn = el('button', {
+      class: `btn btn-toggle ${getShowNamesToUsers() ? 'is-on' : ''}`,
+      type: 'button',
+      'aria-pressed': getShowNamesToUsers() ? 'true' : 'false',
+      text: getShowNamesToUsers() ? t('showNamesToggleOn') : t('showNamesToggleOff'),
     });
-    root.appendChild(
-      el('div', { class: 'settings-row' }, [
-        el('label', { class: 'hide-name-label' }, [showNamesCheckbox, ' ' + t('showNamesToUsersOption')]),
-      ])
-    );
-    root.appendChild(el('div', { class: 'hide-name-hint', text: t('showNamesToUsersHint') }));
-    showNamesCheckbox.addEventListener('change', () => {
-      setShowNamesToUsers(showNamesCheckbox.checked);
-      render();
+    showNamesBtn.addEventListener('click', () => {
+      const next = !getShowNamesToUsers();
+      setShowNamesToUsers(next);
+      showNamesBtn.classList.toggle('is-on', next);
+      showNamesBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
+      showNamesBtn.textContent = next ? t('showNamesToggleOn') : t('showNamesToggleOff');
       triggerBackgroundSync();
     });
+    root.appendChild(el('div', { class: 'settings-row' }, [showNamesBtn]));
+    root.appendChild(el('div', { class: 'hide-name-hint', text: t('showNamesToUsersHint') }));
 
     root.appendChild(el('h3', { class: 'section-title', text: t('changePin') }));
     const newPinInput = el('input', { type: 'password', class: 'input', placeholder: t('newPin'), inputmode: 'numeric' });
