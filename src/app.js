@@ -40,11 +40,13 @@ const ACTOR_NAME_KEY = 'sdc_last_actor_name';
 
 let suppliers = [];
 let requests = [];
-let currentView = 'search';
+let currentView = 'home';
 let editingSupplier = null; // للمسؤول: تعديل مباشر
 let suggestingEditFor = null; // للمستخدم: اقتراح تعديل
 let lastSearchQuery = ''; // للحفاظ على نص البحث عند إعادة رسم الصفحة (مثلًا بعد مزامنة في الخلفية)
+let lastHomeQuery = '';
 let restoreFocusToSearch = false;
+let menuOpen = false;
 
 const appRoot = document.getElementById('app');
 
@@ -208,80 +210,192 @@ function render() {
   restoreFocusToSearch = !!document.activeElement?.classList?.contains('search-input');
   clear(appRoot);
   appRoot.appendChild(renderHeader());
-  appRoot.appendChild(renderNav());
   const viewRoot = el('main', { class: 'view-root', id: 'view-root' });
   appRoot.appendChild(viewRoot);
   renderCurrentView(viewRoot);
+  renderMenuOverlay();
 }
 
 function renderHeader() {
   const online = navigator.onLine;
-  const langBtns = el(
-    'div',
-    { class: 'lang-switch' },
-    SUPPORTED_LANGS.map((code) =>
-      el('button', {
-        class: `lang-btn ${getLang() === code ? 'active' : ''}`,
-        type: 'button',
-        text: DICTS[code].langName,
-        onClick: () => setLang(code),
-      })
-    )
-  );
-
-  const roleControls = el('div', { class: 'role-controls' }, [
-    el('span', { class: `role-badge ${isAdmin() ? 'admin' : ''}`, text: isAdmin() ? t('adminMode') : t('userMode') }),
-    isAdmin()
-      ? el('button', { class: 'btn btn-link', type: 'button', text: t('logout'), onClick: handleLogout })
-      : el('button', { class: 'btn btn-link', type: 'button', text: t('loginAsAdmin'), onClick: handleLoginPrompt }),
-  ]);
-
   return el('header', { class: 'app-header' }, [
-    el('div', { class: 'app-header-top' }, [
-      el('div', { class: 'status-sync-group' }, [
-        el('span', { class: `status-dot ${online ? 'online' : 'offline'}`, text: online ? t('onlineBadge') : t('offlineBadge') }),
-        el('button', { class: 'sync-btn', type: 'button', 'aria-label': t('syncButton'), onClick: handleManualSync }, [
-          el('span', { text: '🔄' }),
-          el('span', { text: t('syncLabel') }),
-        ]),
+    el('button', {
+      class: 'btn-pill btn-menu',
+      type: 'button',
+      'aria-haspopup': 'true',
+      'aria-expanded': menuOpen ? 'true' : 'false',
+      'aria-controls': 'app-menu-sheet',
+      onClick: openMenu,
+    }, [el('span', { 'aria-hidden': 'true', text: '☰' }), el('span', { text: t('menuButton') })]),
+    el('div', { class: 'status-sync-group' }, [
+      el('span', {
+        class: `status-dot ${online ? 'online' : 'offline'}`,
+        title: online ? t('onlineBadge') : t('offlineBadge'),
+        'aria-label': online ? t('onlineBadge') : t('offlineBadge'),
+      }),
+      el('button', { class: 'btn-pill btn-sync', type: 'button', 'aria-label': t('syncButton'), onClick: handleManualSync }, [
+        el('span', { 'aria-hidden': 'true', text: '🔄' }),
+        el('span', { text: t('syncLabel') }),
       ]),
-      langBtns,
     ]),
-    el('h1', { class: 'app-title', text: t('appTitle') }),
-    roleControls,
   ]);
 }
 
-function renderNav() {
-  const items = [
-    { id: 'search', label: t('navSearch') },
-    { id: 'add', label: t('navAdd') },
-  ];
-  if (isAdmin()) items.push({ id: 'review', label: t('navReview'), badge: requests.filter((r) => r.status === 'pending').length });
-  items.push({ id: 'settings', label: t('navSettings') });
+// ---------------- القائمة الجانبية ----------------
 
-  return el(
-    'nav',
-    { class: 'app-nav' },
-    items.map((it) =>
-      el('button', {
-        class: `nav-btn ${currentView === it.id ? 'active' : ''}`,
-        type: 'button',
-        onClick: () => navigate(it.id),
-      }, [
-        it.label,
-        it.badge ? el('span', { class: 'nav-badge', text: String(it.badge) }) : null,
-      ])
-    )
+function openMenu() {
+  menuOpen = true;
+  renderMenuOverlay();
+}
+function closeMenu() {
+  menuOpen = false;
+  renderMenuOverlay();
+}
+
+function renderMenuOverlay() {
+  let scrim = document.getElementById('app-menu-scrim');
+  let sheet = document.getElementById('app-menu-sheet');
+  if (!scrim) {
+    scrim = el('div', { class: 'menu-scrim', id: 'app-menu-scrim' });
+    scrim.addEventListener('click', closeMenu);
+    document.body.appendChild(scrim);
+  }
+  if (!sheet) {
+    sheet = el('nav', { class: 'menu-sheet', id: 'app-menu-sheet' });
+    document.body.appendChild(sheet);
+  }
+
+  scrim.hidden = !menuOpen;
+  sheet.classList.toggle('open', menuOpen);
+  sheet.setAttribute('aria-hidden', menuOpen ? 'false' : 'true');
+
+  clear(sheet);
+
+  const closeBtn = el('button', {
+    class: 'icon-btn',
+    type: 'button',
+    'aria-label': t('closeMenuLabel'),
+    text: '✕',
+    onClick: closeMenu,
+  });
+  sheet.appendChild(
+    el('div', { class: 'menu-head' }, [el('span', { text: t('menuButton') }), closeBtn])
   );
+
+  function menuItem({ icon, label, badge, onClick }) {
+    return el('button', {
+      class: 'menu-item',
+      type: 'button',
+      onClick: () => {
+        closeMenu();
+        onClick();
+      },
+    }, [
+      el('span', { class: 'menu-icon', 'aria-hidden': 'true', text: icon }),
+      el('span', { text: label }),
+      badge ? el('span', { class: 'menu-badge', text: String(badge) }) : null,
+    ]);
+  }
+
+  sheet.appendChild(menuItem({ icon: '📋', label: t('navSupplierList'), onClick: () => navigate('list') }));
+  sheet.appendChild(menuItem({ icon: '➕', label: t('navAdd'), onClick: () => navigate('add') }));
+  if (isAdmin()) {
+    sheet.appendChild(
+      menuItem({
+        icon: '🗂️',
+        label: t('navReview'),
+        badge: requests.filter((r) => r.status === 'pending').length || null,
+        onClick: () => navigate('review'),
+      })
+    );
+  }
+  sheet.appendChild(menuItem({ icon: '⚙️', label: t('navSettings'), onClick: () => navigate('settings') }));
+  sheet.appendChild(
+    isAdmin()
+      ? menuItem({ icon: '👤', label: t('logout'), onClick: handleLogout })
+      : menuItem({ icon: '👤', label: t('loginAsAdmin'), onClick: handleLoginPrompt })
+  );
+
+  return sheet;
 }
 
 function renderCurrentView(root) {
-  if (currentView === 'search') return renderSearchView(root);
+  if (currentView === 'home') return renderHomeView(root);
+  if (currentView === 'list') return renderSearchView(root);
   if (currentView === 'add') return renderAddView(root);
   if (currentView === 'edit') return renderEditView(root);
-  if (currentView === 'review') return isAdmin() ? renderReviewView(root) : navigate('search');
+  if (currentView === 'review') return isAdmin() ? renderReviewView(root) : navigate('home');
   if (currentView === 'settings') return renderSettingsView(root);
+}
+
+// ---------------- البحث المبسّط (الصفحة الرئيسية) ----------------
+
+function renderHomeView(root) {
+  const searchWrap = el('div', { class: 'home-search-wrap' });
+  const input = el('input', {
+    type: 'search',
+    class: 'search-input home-search-input',
+    placeholder: t('homeSearchPlaceholder'),
+    autofocus: true,
+    value: lastHomeQuery,
+    'aria-label': t('homeSearchPlaceholder'),
+  });
+  const resultsContainer = el('div', { class: 'home-results', hidden: true });
+
+  searchWrap.appendChild(input);
+  root.appendChild(el('div', { class: 'home-hero' }, [searchWrap, resultsContainer]));
+
+  if (restoreFocusToSearch) {
+    setTimeout(() => {
+      input.focus();
+      const pos = input.value.length;
+      input.setSelectionRange?.(pos, pos);
+    }, 0);
+  }
+
+  function update() {
+    lastHomeQuery = input.value;
+    clear(resultsContainer);
+    const query = input.value.trim();
+    if (!query) {
+      resultsContainer.hidden = true;
+      root.querySelector('.home-hero').classList.add('is-empty');
+      return;
+    }
+    root.querySelector('.home-hero').classList.remove('is-empty');
+    resultsContainer.hidden = false;
+    const active = suppliers.filter((s) => s.status !== 'deleted');
+    const results = searchSuppliers(active, query);
+    if (!results.length) {
+      resultsContainer.appendChild(renderEmptyState(true));
+      return;
+    }
+    for (const supplier of results) {
+      resultsContainer.appendChild(renderSupplierCodeResult(supplier));
+    }
+  }
+
+  input.addEventListener('input', debounce(update, 80));
+  update();
+}
+
+function renderSupplierCodeResult(supplier) {
+  const codes = supplier.codes || [];
+  if (codes.length <= 1) {
+    return el('div', { class: 'result-block' }, [
+      el('p', { class: 'result-title', text: `${t('fieldSupplierCode')}:` }),
+      el('p', { class: 'result-code', text: codes[0]?.code || '' }),
+    ]);
+  }
+  const lines = [];
+  for (const c of codes) {
+    if (c.city) lines.push(el('p', { class: 'result-city', text: `${c.city}:` }));
+    lines.push(el('p', { class: 'result-code', text: c.code }));
+  }
+  return el('div', { class: 'result-block' }, [
+    el('p', { class: 'result-title', text: t('fieldSupplierCode') }),
+    ...lines,
+  ]);
 }
 
 // ---------------- البحث ----------------
@@ -416,7 +530,7 @@ function buildActorNameField() {
 
 function renderEditView(root) {
   const supplier = editingSupplier || suggestingEditFor;
-  if (!supplier) return navigate('search');
+  if (!supplier) return navigate('list');
   const isDirect = !!editingSupplier;
   root.appendChild(el('h2', { class: 'view-title', text: isDirect ? t('editSupplierTitleAdmin') : t('editRequestTitle') }));
   const wrap = el('div', { class: 'form-wrap' });
@@ -429,7 +543,7 @@ function renderEditView(root) {
   });
   wrap.appendChild(form);
   root.appendChild(
-    el('button', { class: 'btn btn-link', type: 'button', text: t('back'), onClick: () => navigate('search') })
+    el('button', { class: 'btn btn-link', type: 'button', text: t('back'), onClick: () => navigate('list') })
   );
   root.appendChild(wrap);
 }
@@ -512,7 +626,7 @@ function showSubmitConfirmation(admin) {
         variant: 'btn-primary',
         onClick: () => {
           closeModal();
-          navigate('search');
+          navigate('list');
         },
       },
     ],
@@ -623,7 +737,7 @@ function handleLoginPrompt() {
 
 function handleLogout() {
   logout();
-  navigate('search');
+  navigate('home');
 }
 
 // ---------------- الإعدادات ----------------
