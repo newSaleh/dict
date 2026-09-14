@@ -3,10 +3,10 @@
 import { t, getLang } from './i18n.js';
 
 const WIDTH = 1080;
-const ACCENT = '#1d6f5c';
-const TEXT_DARK = '#1a1a1a';
+const ACCENT = '#000000';
+const TEXT_DARK = '#111111';
 const TEXT_MUTED = '#6b6b6b';
-const BORDER = '#e2e2e2';
+const BORDER = '#d9d9d9';
 const FONT = 'system-ui, Tahoma, Arial, sans-serif';
 
 function wrapText(ctx, text, maxWidth) {
