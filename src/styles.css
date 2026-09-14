@@ -421,6 +421,18 @@ input {
   padding: 8px 4px;
   min-height: auto;
 }
+.btn-toggle {
+  width: 100%;
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+  text-align: center;
+}
+.btn-toggle.is-on {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
 
 .icon-btn {
   background: transparent;
