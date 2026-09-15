@@ -92,7 +92,19 @@ export async function logout() {
   }
 }
 
+// تغيير كلمة المرور محليًا وحده لا يكفي لو كانت كلمة المرور الحقيقية في
+// Firestore قد تغيّرت أيضًا (تدوير كلمة المرور بعد تسريبها مثلًا): بدون هذه
+// المحاولة الفورية، يبقى الجهاز "مسؤولًا محليًا" فقط بلا صلاحية كتابة حقيقية
+// في السحابة إلى أن يسجّل خروجًا ثم دخولًا من جديد — وأي تعديل يجريه في هذه
+// الأثناء يظهر عنده لكن لا يصل لبقية المستخدمين إطلاقًا بصمت.
 export async function changeAdminPin(newPin) {
   const hash = await sha256Hex(newPin);
   localStorage.setItem(PIN_HASH_KEY, hash);
+  try {
+    const cloud = await import('./cloud.js');
+    const ok = await cloud.grantCloudAdmin(newPin);
+    if (ok) localStorage.setItem(CLOUD_GRANTED_KEY, 'true');
+  } catch {
+    // بلا إنترنت الآن — سيُعاد المحاولة لاحقًا عبر ensureCloudAdminGrant
+  }
 }
