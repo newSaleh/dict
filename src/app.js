@@ -25,7 +25,7 @@ import { getShowNamesToUsers, setShowNamesToUsers } from './settings.js';
 import { searchSuppliers } from './search.js';
 import { findDuplicates } from './duplicates.js';
 import { exportSuppliersListAsImages } from './export-image.js';
-import { el, clear, debounce } from './utils.js';
+import { el, clear, debounce, normalizeText } from './utils.js';
 import {
   renderSupplierCard,
   renderResultsCount,
@@ -393,7 +393,7 @@ function renderHomeView(root) {
       return;
     }
     for (const supplier of results) {
-      resultsContainer.appendChild(renderSupplierCodeResult(supplier));
+      resultsContainer.appendChild(renderSupplierCodeResult(supplier, query));
     }
   }
 
@@ -401,11 +401,28 @@ function renderHomeView(root) {
   update();
 }
 
-function renderSupplierCodeResult(supplier) {
+// أي ماركة لدى المورد تطابق نص البحث (كاملة أولًا، ثم جزئية)، لعرضها كإشارة
+// توضّح للمستخدم سبب ظهور هذا المورد تحديدًا ضمن نتائج بحث عام مثل "bb"
+function findMatchingBrand(supplier, query) {
+  const nq = normalizeText(query);
+  if (!nq) return null;
+  const brands = supplier.brands || [];
+  const exact = brands.find((b) => normalizeText(b) === nq);
+  if (exact) return exact;
+  return brands.find((b) => normalizeText(b).includes(nq)) || null;
+}
+
+function renderSupplierCodeResult(supplier, query) {
   const codes = supplier.codes || [];
+  const matchedBrand = findMatchingBrand(supplier, query);
+  const matchTag = matchedBrand ? el('span', { class: 'result-match-tag', text: matchedBrand }) : null;
+
   if (codes.length <= 1) {
     return el('div', { class: 'result-block' }, [
-      el('p', { class: 'result-title', text: `${t('fieldSupplierCode')}:` }),
+      el('div', { class: 'result-header' }, [
+        el('p', { class: 'result-title', text: `${t('fieldSupplierCode')}:` }),
+        matchTag,
+      ]),
       el('p', { class: 'result-code', text: codes[0]?.code || '' }),
     ]);
   }
@@ -415,7 +432,10 @@ function renderSupplierCodeResult(supplier) {
     lines.push(el('p', { class: 'result-code', text: c.code }));
   }
   return el('div', { class: 'result-block' }, [
-    el('p', { class: 'result-title', text: t('fieldSupplierCode') }),
+    el('div', { class: 'result-header' }, [
+      el('p', { class: 'result-title', text: t('fieldSupplierCode') }),
+      matchTag,
+    ]),
     ...lines,
   ]);
 }

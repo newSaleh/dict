@@ -249,10 +249,27 @@ input {
 .result-block:last-child {
   border-bottom: none;
 }
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 .result-title {
   font-weight: 700;
   font-size: 1.05rem;
   margin: 0;
+}
+.result-match-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 12px;
+  white-space: nowrap;
+  direction: ltr;
 }
 .result-city {
   font-weight: 600;
