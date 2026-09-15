@@ -171,7 +171,10 @@ async function handleManualSync() {
     const result = await syncNow();
     await refreshData();
     render();
-    if (result.errors.length && !result.pulledSuppliers && !result.pushedSuppliers && !result.pushedRequests) {
+    // أي خطأ يُعرض دائمًا، حتى لو نجح جزء آخر من المزامنة (مثلًا نجح السحب
+    // من السحابة بينما فشل رفع تعديل محلي بصلاحية غير صالحة) — إخفاء الخطأ
+    // هنا يعني أن تعديلات المسؤول قد لا تصل لبقية المستخدمين دون أن يعلم
+    if (result.errors.length) {
       showSyncErrorDetails(result.errors);
     } else {
       toast(t('syncDone'));
