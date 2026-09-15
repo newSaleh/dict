@@ -89,6 +89,7 @@ export default {
   userMode: 'صارف',
   enterPin: 'منتظم کا پاس ورڈ درج کریں',
   wrongPin: 'غلط پاس ورڈ',
+  needsInternetFirstLogin: 'اس آلے پر پہلی بار لاگ ان کے لیے انٹرنیٹ کنکشن ضروری ہے تاکہ تصدیق ہو سکے، چاہے پاس ورڈ درست ہو',
   pin: 'پاس ورڈ',
   privacySection: 'سپلائر ڈیٹا کی رازداری',
   showNamesToggleOn: '🔓 نام سب کو نظر آ رہے ہیں — چھپانے کے لیے دبائیں',

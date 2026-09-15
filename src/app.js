@@ -18,8 +18,8 @@ import {
   loginAsAdmin,
   logout,
   changeAdminPin,
-  ensurePinInitialized,
   ensureCloudAdminGrant,
+  hasLocalPin,
 } from './auth.js';
 import { getShowNamesToUsers, setShowNamesToUsers } from './settings.js';
 import { searchSuppliers } from './search.js';
@@ -748,6 +748,7 @@ function handleLoginPrompt() {
             await ensureCloudAdminGrant(pinInput.value);
             triggerBackgroundSync();
           } else {
+            errorMsg.textContent = !navigator.onLine && !hasLocalPin() ? t('needsInternetFirstLogin') : t('wrongPin');
             errorMsg.hidden = false;
           }
         },
@@ -981,7 +982,6 @@ function handleSeedReset() {
 
 async function boot() {
   initI18n();
-  await ensurePinInitialized();
   await refreshData();
   onLangChange(() => render());
   onRoleChange(() => render());

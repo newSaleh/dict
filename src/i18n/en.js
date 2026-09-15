@@ -89,6 +89,7 @@ export default {
   userMode: 'User',
   enterPin: 'Enter admin password',
   wrongPin: 'Incorrect password',
+  needsInternetFirstLogin: 'The first login on this device needs an internet connection to verify, even if the password is correct',
   pin: 'Password',
   privacySection: 'Supplier Data Privacy',
   showNamesToggleOn: '🔓 Names are visible to everyone — tap to hide',
