@@ -183,11 +183,19 @@ async function handleManualSync() {
   }
 }
 
+// خوادم GitHub Pages تُخزّن service-worker.js مؤقتًا على مستوى الشبكة
+// (CDN) لدقائق، وطلب عادي لنفس الرابط قد يستلم نسخة قديمة رغم وجود نسخة
+// أحدث فعليًا على الخادم — فيظن المتصفح أنه لا تحديث جديد. رابط بمعامل
+// فريد يتغيّر في كل مرة (?v=الوقت الحالي) يضمن طلبًا شبكيًا حقيقيًا يتجاوز
+// أي تخزين مؤقت وسيط، دون أي كلفة إضافية على الجهاز (ملف صغير جدًا فقط).
+function serviceWorkerUrl() {
+  return `./service-worker.js?v=${Date.now()}`;
+}
+
 async function checkForAppUpdate() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    const reg = await navigator.serviceWorker.getRegistration();
-    await reg?.update();
+    await navigator.serviceWorker.register(serviceWorkerUrl());
   } catch {
     // تجاهل: هذا فحص إضافي اختياري ولا يجب أن يعطّل زر التحديث لو فشل
   }
@@ -1015,8 +1023,7 @@ async function boot() {
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
-      .register('./service-worker.js')
-      .then((reg) => reg.update())
+      .register(serviceWorkerUrl())
       .catch((err) => console.warn('SW registration failed', err));
 
     // بمجرد أن يتولى Service Worker جديد التحكم (بعد نشر تحديث)، أعد تحميل
