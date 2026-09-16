@@ -1003,8 +1003,27 @@ function handleSeedReset() {
 
 // ---------------- التشغيل ----------------
 
+// خاص بنسخة ويندوز غير المتصلة: إن جاء التطبيق مرفَقًا بملف بيانات مُجهَّز
+// مسبقًا (offline-seed.json) ولم يكن هناك أي بيانات محلية بعد، يستورده تلقائيًا
+// عند أول تشغيل حتى يعمل البرنامج فورًا بدون أي اتصال بالإنترنت. هذا الملف
+// غير موجود إطلاقًا على الموقع العادي، فلا يؤثر عليه شيء (فقط محاولة تحميل
+// فاشلة صامتة تُتجاهل).
+async function autoSeedFromBundleIfEmpty() {
+  try {
+    const existing = await getAllSuppliers();
+    if (existing.length) return;
+    const res = await fetch('./offline-seed.json');
+    if (!res.ok) return;
+    const data = await res.json();
+    await importAllData(data);
+  } catch {
+    // لا يوجد ملف بيانات مرفق (الموقع العادي)، أو تعذّرت قراءته — لا بأس
+  }
+}
+
 async function boot() {
   initI18n();
+  await autoSeedFromBundleIfEmpty();
   await refreshData();
   onLangChange(() => render());
   onRoleChange(() => render());
