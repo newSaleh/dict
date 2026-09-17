@@ -25,6 +25,7 @@ import { getShowNamesToUsers, setShowNamesToUsers } from './settings.js';
 import { searchSuppliers } from './search.js';
 import { findDuplicates } from './duplicates.js';
 import { exportSuppliersListAsImages } from './export-image.js';
+import { suppliersToExcelBlob } from './export-excel.js';
 import { el, clear, debounce, normalizeText } from './utils.js';
 import {
   renderSupplierCard,
@@ -854,6 +855,12 @@ function renderSettingsView(root) {
           text: t('exportData'),
           onClick: handleExportData,
         }),
+        el('button', {
+          class: 'btn btn-outline',
+          type: 'button',
+          text: t('exportExcel'),
+          onClick: handleExportExcel,
+        }),
         el('input', {
           type: 'file',
           accept: 'application/json',
@@ -896,6 +903,17 @@ async function handleExportData() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = el('a', { href: url, download: `supplier-data-${Date.now()}.json` });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+async function handleExportExcel() {
+  const active = suppliers.filter((s) => s.status !== 'deleted');
+  const blob = suppliersToExcelBlob(active);
+  const url = URL.createObjectURL(blob);
+  const a = el('a', { href: url, download: `supplier-data-${Date.now()}.xlsx` });
   document.body.appendChild(a);
   a.click();
   a.remove();

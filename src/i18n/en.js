@@ -103,6 +103,7 @@ export default {
   settingsTitle: 'Settings',
   dataManagement: 'Data Management',
   exportData: 'Export all data (JSON)',
+  exportExcel: 'Export as Excel file',
   importData: 'Import data (JSON)',
   seedReset: 'Reload sample data',
   supplierCardHeader: 'Supplier Data Center',

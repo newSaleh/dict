@@ -103,6 +103,7 @@ export default {
   settingsTitle: 'ترتیبات',
   dataManagement: 'ڈیٹا کا انتظام',
   exportData: 'تمام ڈیٹا برآمد کریں (JSON)',
+  exportExcel: 'Excel فائل کے طور پر برآمد کریں',
   importData: 'ڈیٹا درآمد کریں (JSON)',
   seedReset: 'نمونہ ڈیٹا دوبارہ لوڈ کریں',
   supplierCardHeader: 'سپلائرز ڈیٹا سینٹر',

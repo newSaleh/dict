@@ -103,6 +103,7 @@ export default {
   settingsTitle: 'الإعدادات',
   dataManagement: 'إدارة البيانات',
   exportData: 'تصدير كل البيانات (JSON)',
+  exportExcel: 'تصدير كملف Excel',
   importData: 'استيراد بيانات (JSON)',
   seedReset: 'إعادة تحميل البيانات التجريبية',
   supplierCardHeader: 'مركز بيانات الموردين',
